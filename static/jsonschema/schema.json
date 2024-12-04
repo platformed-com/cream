@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SCIM Schema Resource",
+  "description": "Represents a SCIM schema resource as defined in RFC 7643.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["urn:ietf:params:scim:schemas:core:2.0:Schema"]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The URIs of the SCIM schemas applicable to this resource."
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the schema."
+    },
+    "name": {
+      "type": "string",
+      "description": "The schema's name."
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable description of the schema."
+    },
+    "attributes": {
+      "type": "array",
+      "description": "A list of attribute definitions that describe the schema.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the attribute."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "boolean",
+              "decimal",
+              "integer",
+              "dateTime",
+              "binary",
+              "reference",
+              "complex"
+            ],
+            "description": "The data type of the attribute."
+          },
+          "multiValued": {
+            "type": "boolean",
+            "description": "Indicates if the attribute is multi-valued.",
+            "default": false
+          },
+          "description": {
+            "type": "string",
+            "description": "A human-readable description of the attribute."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Indicates if the attribute is required.",
+            "default": false
+          },
+          "canonicalValues": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "A list of canonical values for the attribute."
+          },
+          "caseExact": {
+            "type": "boolean",
+            "description": "Indicates if the attribute is case-sensitive.",
+            "default": false
+          },
+          "mutability": {
+            "type": "string",
+            "enum": ["readOnly", "readWrite", "immutable", "writeOnly"],
+            "description": "Defines the attribute's mutability."
+          },
+          "returned": {
+            "type": "string",
+            "enum": ["always", "never", "default", "request"],
+            "description": "Specifies when the attribute is returned in responses."
+          },
+          "uniqueness": {
+            "type": "string",
+            "enum": ["none", "server", "global"],
+            "description": "Specifies the attribute's uniqueness level.",
+            "default": "none"
+          },
+          "referenceTypes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "A list of SCIM resource types that may be referenced. The special values 'external' and 'uri' indicate that the attribute references an external resouce or service endpoint."
+          },
+          "subAttributes": {
+            "type": "array",
+            "items": { "$ref": "#/properties/attributes/items" },
+            "description": "Defines sub-attributes for complex attributes."
+          }
+        },
+        "required": ["name", "type"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schemas", "id", "name", "description", "attributes"],
+  "additionalProperties": false
+}
