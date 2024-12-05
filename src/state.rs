@@ -1,14 +1,23 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use crate::{config::ServiceProviderConfig, resource_type::ResourceType, schema::Schema};
+use crate::{
+    config::ServiceProviderConfig, manager::ResourceTypeManager, resource_type::ResourceType,
+    schema::Schema,
+};
 
-#[derive(derive_more::Deref, Clone, Debug)]
-pub struct CreamState(Arc<InnerState>);
+#[derive(Clone, Debug)]
+pub struct Cream(pub(crate) Arc<InnerState>);
 
 #[derive(Debug)]
-pub struct InnerState {
-    pub base_url: String,
-    pub config: ServiceProviderConfig,
-    pub schemas: BTreeMap<String, Schema>,
-    pub resource_types: BTreeMap<String, ResourceType>,
+pub(crate) struct ResourceTypeState {
+    pub(crate) resource_type: ResourceType,
+    pub(crate) manager: Box<dyn ResourceTypeManager>,
+}
+
+#[derive(Debug)]
+pub(crate) struct InnerState {
+    pub(crate) base_url: String,
+    pub(crate) config: ServiceProviderConfig,
+    pub(crate) schemas: BTreeMap<String, Schema>,
+    pub(crate) resource_types: BTreeMap<String, ResourceTypeState>,
 }

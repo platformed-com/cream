@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "ResourceType",
+  "description": "Specifies the schema that describes a SCIM resource type",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The resource type's server unique id. May be the same as the 'name' attribute."
+    },
+    "name": {
+      "type": "string",
+      "description": "The resource type name. When applicable, service providers MUST specify the name, e.g., 'User'."
+    },
+    "description": {
+      "type": "string",
+      "description": "The resource type's human-readable description. When applicable, service providers MUST specify the description."
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "The resource type's HTTP-addressable endpoint relative to the Base URL, e.g., '/Users'."
+    },
+    "schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "The resource type's primary/base schema URI."
+    },
+    "schemaExtensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A list of URIs of the resource type's schema extensions.",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URI of a schema extension."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "A Boolean value that specifies whether or not the schema extension is required for the resource type."
+          }
+        },
+        "required": ["schema", "required"]
+      }
+    }
+  },
+  "required": ["name", "endpoint", "schema", "schemaExtensions"]
+}

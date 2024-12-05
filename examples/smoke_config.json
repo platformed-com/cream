@@ -1,0 +1,26 @@
+{
+  "$schema": "../static/jsonschema/core/service_provider_config.json",
+  "patch": {
+    "supported": true
+  },
+  "bulk": {
+    "supported": true,
+    "maxOperations": 1000,
+    "maxPayloadSize": 1048576
+  },
+  "authenticationSchemes": [],
+  "changePassword": {
+    "supported": true
+  },
+  "documentationUri": "https://example.com/docs",
+  "etag": {
+    "supported": true
+  },
+  "filter": {
+    "supported": true,
+    "maxResults": 100
+  },
+  "sort": {
+    "supported": true
+  }
+}

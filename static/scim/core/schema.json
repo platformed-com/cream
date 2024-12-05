@@ -1,5 +1,5 @@
 {
-  "$schema": "../../jsonschema/schema.json",
+  "$schema": "../../jsonschema/core/schema.json",
   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
   "id": "urn:ietf:params:scim:schemas:core:2.0:Schema",
   "name": "Schema",

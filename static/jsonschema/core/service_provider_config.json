@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "Service Provider Configuration",
+  "description": "Schema for representing the service provider's configuration",
+  "properties": {
+    "documentationUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "An HTTP-addressable URL pointing to the service provider's human-consumable help documentation."
+    },
+    "patch": {
+      "type": "object",
+      "description": "A complex type that specifies PATCH configuration options.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        }
+      },
+      "required": ["supported"]
+    },
+    "bulk": {
+      "type": "object",
+      "description": "A complex type that specifies bulk configuration options.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        },
+        "maxOperations": {
+          "type": "integer",
+          "description": "An integer value specifying the maximum number of operations."
+        },
+        "maxPayloadSize": {
+          "type": "integer",
+          "description": "An integer value specifying the maximum payload size in bytes."
+        }
+      },
+      "required": ["supported", "maxOperations", "maxPayloadSize"]
+    },
+    "filter": {
+      "type": "object",
+      "description": "A complex type that specifies FILTER options.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        },
+        "maxResults": {
+          "type": "integer",
+          "description": "An integer value specifying the maximum number of resources returned in a response."
+        }
+      },
+      "required": ["supported", "maxResults"]
+    },
+    "changePassword": {
+      "type": "object",
+      "description": "A complex type that specifies configuration options related to changing a password.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        }
+      },
+      "required": ["supported"]
+    },
+    "sort": {
+      "type": "object",
+      "description": "A complex type that specifies sort result options.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        }
+      },
+      "required": ["supported"]
+    },
+    "etag": {
+      "type": "object",
+      "description": "A complex type that specifies etag options.",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "A Boolean value specifying whether or not the operation is supported."
+        }
+      },
+      "required": ["supported"]
+    },
+    "authenticationSchemes": {
+      "type": "array",
+      "description": "A complex type that specifies supported authentication scheme properties.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The common authentication scheme name, e.g., HTTP Basic."
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the authentication scheme."
+          },
+          "specUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "An HTTP-addressable URL pointing to the authentication scheme's specification."
+          },
+          "documentationUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "An HTTP-addressable URL pointing to the authentication scheme's usage documentation."
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of this authentication scheme."
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "If this is the primary authentication scheme."
+          }
+        },
+        "required": ["name", "description", "type"]
+      }
+    }
+  },
+  "required": [
+    "patch",
+    "bulk",
+    "filter",
+    "changePassword",
+    "sort",
+    "etag",
+    "authenticationSchemes"
+  ]
+}
