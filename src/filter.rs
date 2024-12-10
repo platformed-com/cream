@@ -5,7 +5,10 @@ use bumpalo::Bump;
 use ijson::INumber;
 use nom::Finish;
 
-use crate::error::{Error, ErrorType};
+use crate::{
+    error::{Error, ErrorType},
+    META_RESOURCE_TYPE,
+};
 
 mod parse;
 
@@ -39,6 +42,16 @@ pub(crate) fn default_visit_filter(visitor: &mut impl Visitor, filter: &mut Filt
     }
 }
 
+pub(crate) fn default_visit_value_path(visitor: &mut impl Visitor, value_path: &mut ValuePath) {
+    match value_path {
+        ValuePath::Attr(attr_path) => visitor.visit_attr_path(attr_path),
+        ValuePath::Filtered(attr_path, filter) => {
+            visitor.visit_attr_path(attr_path);
+            visitor.visit_filter(filter);
+        }
+    }
+}
+
 pub(crate) fn default_visit_attr_path(_visitor: &mut impl Visitor, _attr_path: &mut AttrPath) {}
 pub(crate) fn default_visit_comp_value(_visitor: &mut impl Visitor, _comp_value: &mut CompValue) {}
 
@@ -51,6 +64,9 @@ pub(crate) trait Visitor: Sized {
     }
     fn visit_comp_value(&mut self, comp_value: &mut CompValue) {
         default_visit_comp_value(self, comp_value);
+    }
+    fn visit_value_path(&mut self, value_path: &mut ValuePath) {
+        default_visit_value_path(self, value_path);
     }
 }
 
@@ -87,6 +103,58 @@ impl Filter {
             Self::Not(filter) => FilterRef::Not(scope.alloc((**filter).as_ref(scope))),
         }
     }
+    pub(crate) fn take_resource_type_filter(self) -> Result<(Option<Self>, String), Self> {
+        dbg!(&self);
+        match self {
+            Self::And(filters) => {
+                let mut remaining = Vec::new();
+                let mut result = None;
+                for filter in filters {
+                    if result.is_none() {
+                        match filter.take_resource_type_filter() {
+                            Ok(found) => {
+                                result = Some(found);
+                            }
+                            Err(filter) => {
+                                remaining.push(filter);
+                            }
+                        }
+                    } else {
+                        remaining.push(filter);
+                    }
+                }
+                if let Some((other, result)) = result {
+                    if let Some(other) = other {
+                        remaining.push(other);
+                    }
+                    match remaining.len() {
+                        0 => Ok((None, result)),
+                        1 => Ok((
+                            Some(remaining.pop().expect("Already checked length")),
+                            result,
+                        )),
+                        _ => Ok((Some(Self::And(remaining)), result)),
+                    }
+                } else {
+                    Err(Self::And(remaining))
+                }
+            }
+            Self::Compare(ref attr_path, CompareOp::Equal, CompValue::Str(resource_type))
+                if attr_path.urn.is_none()
+                    && attr_path.name.eq_ignore_ascii_case(META_RESOURCE_TYPE.name)
+                    && attr_path.sub_attr.as_ref().is_some_and(|sub_attr| {
+                        sub_attr.eq_ignore_ascii_case(
+                            META_RESOURCE_TYPE
+                                .sub_attr
+                                .expect("Meta resource type has sub attribute"),
+                        )
+                    }) =>
+            {
+                Ok((None, resource_type))
+            }
+            _ => Err(self),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -100,10 +168,10 @@ pub enum FilterRef<'a> {
 }
 
 impl FilterRef<'_> {
-    pub fn iter_cnf(&self) -> impl Iterator<Item = &Self> {
+    pub fn iter_cnf(&self) -> impl Iterator<Item = Self> {
         let items: Vec<_> = match self {
             Self::And(filters) => filters.iter().flat_map(Self::iter_cnf).collect(),
-            _ => vec![self],
+            _ => vec![*self],
         };
         items.into_iter()
     }
@@ -193,8 +261,8 @@ impl FromStr for CompareOp {
 pub(crate) enum CompValue {
     Null,
     Bool(bool),
-    Number(INumber),
-    String(String),
+    Num(INumber),
+    Str(String),
 }
 
 impl CompValue {
@@ -202,8 +270,8 @@ impl CompValue {
         match self {
             Self::Null => CompValueRef::Null,
             Self::Bool(b) => CompValueRef::Bool(*b),
-            Self::Number(n) => CompValueRef::Number(n),
-            Self::String(s) => CompValueRef::String(s.as_str()),
+            Self::Num(n) => CompValueRef::Num(n),
+            Self::Str(s) => CompValueRef::Str(s.as_str()),
         }
     }
 }
@@ -212,8 +280,8 @@ impl CompValue {
 pub enum CompValueRef<'a> {
     Null,
     Bool(bool),
-    Number(&'a INumber),
-    String(&'a str),
+    Num(&'a INumber),
+    Str(&'a str),
 }
 
 pub(crate) fn parse_filter(input: &str) -> Result<Filter, Error> {

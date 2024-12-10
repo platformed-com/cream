@@ -1,7 +1,8 @@
 use axum::{extract::rejection::JsonRejection, http::StatusCode, response::IntoResponse};
+use cream_core::declare_schema;
 use serde::Serialize;
 
-use crate::{declare_schema, json::Json};
+use crate::json::Json;
 
 declare_schema!(ErrorSchema = "urn:ietf:params:scim:api:messages:2.0:Error");
 
@@ -34,6 +35,27 @@ impl Error {
 
     pub fn not_found() -> Self {
         Self::new(StatusCode::NOT_FOUND, None, "Not Found".to_string())
+    }
+    pub fn invalid_filter() -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            Some(ErrorType::InvalidFilter),
+            "Invalid Filter".to_string(),
+        )
+    }
+    pub fn invalid_path() -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            Some(ErrorType::InvalidPath),
+            "Invalid Path".to_string(),
+        )
+    }
+    pub fn expected(expected: &str) -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            Some(ErrorType::InvalidValue),
+            format!("Expected {}", expected),
+        )
     }
 }
 

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{declare_resource_type, declare_schema, meta::Meta};
+use crate::{declare_resource_type, declare_schema, meta::Meta, reference::Reference};
 
 declare_schema!(ResourceTypeSchema = "urn:ietf:params:scim:schemas:core:2.0:ResourceType");
 declare_resource_type!(ResourceTypeResourceType = "ResourceType");
@@ -24,8 +24,11 @@ pub struct ResourceType {
 }
 
 impl ResourceType {
-    pub fn locate(&mut self, base_url: &str) {
-        self.meta.location = Some(format!("{}/ResourceTypes/{}", base_url, self.name));
+    pub fn locate(&mut self) {
+        self.meta.location = Some(Reference::new_relative(&format!(
+            "/ResourceTypes/{}",
+            self.name
+        )));
     }
 }
 
@@ -35,6 +38,3 @@ pub struct SchemaExtension {
     pub schema: String,
     pub required: bool,
 }
-
-#[derive(Debug, Clone)]
-pub struct ResourceTypeName(pub String);

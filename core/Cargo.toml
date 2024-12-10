@@ -1,0 +1,11 @@
+[package]
+name = "cream-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_plain = "1.0"
+derive_more = { version = "1", features = ["display", "deref"] }
+time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
+tokio = { version = "1", optional = true }

@@ -133,9 +133,9 @@ pub fn comp_value(i: &str) -> IResult<&str, CompValue> {
             map_res(many1(alt((digit1, tag(".")))), |digit| {
                 serde_json::from_str(&digit.join(""))
             }),
-            CompValue::Number,
+            CompValue::Num,
         ),
-        map(parse_string, CompValue::String),
+        map(parse_string, CompValue::Str),
     ))(i)
 }
 

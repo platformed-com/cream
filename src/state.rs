@@ -1,9 +1,8 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use crate::{
-    config::ServiceProviderConfig, manager::ResourceTypeManager, resource_type::ResourceType,
-    schema::Schema,
-};
+use cream_core::{ResourceType, Schema};
+
+use crate::{config::ServiceProviderConfig, manager::GenericResourceManager};
 
 #[derive(Clone, Debug)]
 pub struct Cream(pub(crate) Arc<InnerState>);
@@ -11,7 +10,7 @@ pub struct Cream(pub(crate) Arc<InnerState>);
 #[derive(Debug)]
 pub(crate) struct ResourceTypeState {
     pub(crate) resource_type: ResourceType,
-    pub(crate) manager: Box<dyn ResourceTypeManager>,
+    pub(crate) manager: Box<dyn GenericResourceManager>,
 }
 
 #[derive(Debug)]

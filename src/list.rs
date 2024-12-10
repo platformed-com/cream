@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::declare_schema;
+use cream_core::declare_schema;
 
 declare_schema!(ListResponseSchema = "urn:ietf:params:scim:api:messages:2.0:ListResponse");
 

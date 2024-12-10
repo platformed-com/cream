@@ -1,10 +1,10 @@
 use std::{collections::BTreeMap, sync::Arc};
 
+use cream_core::Schema;
+
 use crate::{
     config::ServiceProviderConfig,
-    manager::ResourceTypeManager,
-    resource_type::ResourceType,
-    schema::Schema,
+    manager::GenericResourceManager,
     state::{Cream, InnerState, ResourceTypeState},
 };
 
@@ -24,15 +24,19 @@ impl CreamBuilder {
             resource_types: BTreeMap::new(),
         }
     }
-    pub fn schema(mut self, schema: Schema) -> Self {
-        self.schemas.insert(schema.id.clone(), schema);
-        self
+    fn load_schema(&mut self, id: &str, manager: &impl GenericResourceManager) {
+        if !self.schemas.contains_key(id) {
+            self.schemas.insert(id.into(), manager.load_schema(id));
+        }
     }
-    pub fn resource_type(
-        mut self,
-        resource_type: ResourceType,
-        manager: impl ResourceTypeManager,
-    ) -> Self {
+    pub fn resource_type(mut self, manager: impl GenericResourceManager) -> Self {
+        let resource_type = manager.load_resource_type();
+
+        self.load_schema(&resource_type.schema, &manager);
+        for ext in &resource_type.schema_extensions {
+            self.load_schema(&ext.schema, &manager);
+        }
+
         self.resource_types.insert(
             resource_type.name.clone(),
             ResourceTypeState {

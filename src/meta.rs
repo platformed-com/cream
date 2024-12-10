@@ -1,13 +1,25 @@
-use serde::Serialize;
+use crate::AttrPathRef;
 
-use crate::date_time::DateTime;
+pub const META_RESOURCE_TYPE: AttrPathRef = AttrPathRef {
+    urn: None,
+    name: "meta",
+    sub_attr: Some("resourceType"),
+};
 
-#[derive(Serialize, Debug, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct Meta<R: Serialize> {
-    pub resource_type: R,
-    pub created: Option<DateTime>,
-    pub last_modified: Option<DateTime>,
-    pub location: Option<String>,
-    pub version: Option<String>,
-}
+pub const META_CREATED: AttrPathRef = AttrPathRef {
+    urn: None,
+    name: "meta",
+    sub_attr: Some("created"),
+};
+
+pub const META_LAST_MODIFIED: AttrPathRef = AttrPathRef {
+    urn: None,
+    name: "meta",
+    sub_attr: Some("lastModified"),
+};
+
+pub const META_VERSION: AttrPathRef = AttrPathRef {
+    urn: None,
+    name: "meta",
+    sub_attr: Some("version"),
+};

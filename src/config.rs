@@ -1,6 +1,5 @@
+use cream_core::{declare_resource_type, declare_schema, Meta};
 use serde::{Deserialize, Serialize};
-
-use crate::{declare_resource_type, declare_schema, meta::Meta};
 
 declare_schema!(
     ServiceProviderConfigSchema = "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
