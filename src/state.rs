@@ -4,6 +4,7 @@ use cream_core::{ResourceType, Schema};
 
 use crate::{config::ServiceProviderConfig, manager::GenericResourceManager};
 
+/// The main entry point for the `cream` library.
 #[derive(Clone, Debug)]
 pub struct Cream(pub(crate) Arc<InnerState>);
 

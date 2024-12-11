@@ -1,5 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
+    http::request::Parts,
     response::IntoResponse,
     Extension,
 };
@@ -23,6 +24,7 @@ use super::{
 
 async fn list_resources_inner(
     state: &Cream,
+    parts: &Parts,
     resource_type: &str,
     args: ListResourcesArgs,
 ) -> Result<impl IntoResponse, Error> {
@@ -67,7 +69,7 @@ async fn list_resources_inner(
 
     translated_args.optional_attributes = &optional_attributes;
 
-    let result = rts.manager.list(translated_args).await?;
+    let result = rts.manager.list(parts, translated_args).await?;
     Ok(Json(ListResponse {
         start_index: args.start_index.unwrap_or(1),
         total_results: result.resources.len(),
@@ -81,20 +83,23 @@ pub(crate) async fn list_resources(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Query(args): Query<ListResourcesArgs>,
+    parts: Parts,
 ) -> Result<impl IntoResponse, Error> {
-    list_resources_inner(&state, &resource_type, args).await
+    list_resources_inner(&state, &parts, &resource_type, args).await
 }
 
 pub(crate) async fn search_resources(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
+    parts: Parts,
     Json(args): Json<ListResourcesArgs>,
 ) -> Result<impl IntoResponse, Error> {
-    list_resources_inner(&state, &resource_type, args).await
+    list_resources_inner(&state, &parts, &resource_type, args).await
 }
 
 pub(crate) async fn search_root(
     State(state): State<Cream>,
+    parts: Parts,
     Json(args): Json<ListResourcesArgs>,
 ) -> Result<impl IntoResponse, Error> {
     let scope = Bump::new();
@@ -103,13 +108,9 @@ pub(crate) async fn search_root(
     // Must have a resource type filter
     let filter = args.filter.ok_or_else(Error::invalid_filter)?;
 
-    dbg!(&filter);
-
     let (parsed_filter, resource_type) = filter::parse_filter(&filter)?
         .take_resource_type_filter()
         .map_err(|_| Error::invalid_filter())?;
-
-    dbg!(&parsed_filter, &resource_type);
 
     let rts = state
         .0
@@ -150,8 +151,8 @@ pub(crate) async fn search_root(
 
     translated_args.optional_attributes = &optional_attributes;
 
-    let result = rts.manager.list(translated_args).await?;
-    dbg!(&result);
+    let result = rts.manager.list(&parts, translated_args).await?;
+
     Ok(Json(ListResponse {
         start_index: args.start_index.unwrap_or(1),
         total_results: result.resources.len(),
@@ -163,6 +164,7 @@ pub(crate) async fn search_root(
 
 pub(crate) async fn get_resource_inner(
     state: &Cream,
+    parts: &Parts,
     rts: &ResourceTypeState,
     args: GetResourcesArgs,
     id: String,
@@ -183,7 +185,7 @@ pub(crate) async fn get_resource_inner(
 
     translated_args.optional_attributes = &optional_attributes;
 
-    Ok(Json(rts.manager.get(translated_args).await?))
+    Ok(Json(rts.manager.get(parts, translated_args).await?))
 }
 
 pub(crate) async fn get_resource(
@@ -191,6 +193,7 @@ pub(crate) async fn get_resource(
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Path(id): Path<String>,
     Query(args): Query<GetResourcesArgs>,
+    parts: Parts,
 ) -> Result<impl IntoResponse, Error> {
     let rts = state
         .0
@@ -198,6 +201,6 @@ pub(crate) async fn get_resource(
         .get(&resource_type)
         .ok_or_else(Error::not_found)?;
 
-    let result = get_resource_inner(&state, rts, args, id).await?;
+    let result = get_resource_inner(&state, &parts, rts, args, id).await?;
     Ok(result)
 }

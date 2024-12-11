@@ -1,3 +1,8 @@
+//! cream-macros
+//!
+//! This crate defines procedural macros for the `cream`` crate.
+#![deny(missing_docs)]
+
 use std::{collections::HashMap, fs};
 
 use convert_case::{Case, Casing};
@@ -51,10 +56,21 @@ impl Parse for ReferencedSchema {
     }
 }
 
-fn load_static_resource<T: DeserializeOwned>(path: &str) -> (T, String) {
+fn load_static_resource<T: DeserializeOwned>(
+    path: &str,
+    referenced_files_hack: &mut Vec<TokenStream2>,
+) -> (T, String) {
     let root = std::env::var("CARGO_MANIFEST_DIR").unwrap_or(".".into());
-    let path = std::path::Path::new(&root).join(path);
+    let path = std::path::Path::new(&root)
+        .join(path)
+        .canonicalize()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
     let content = fs::read_to_string(&path).expect("File not found");
+    referenced_files_hack.push(quote! {
+        const _: &str = include_str!(#path);
+    });
     (
         serde_json::from_str(&content).expect("Failed to parse JSON"),
         content,
@@ -89,7 +105,7 @@ fn declare_manager_trait(
     let schema_arms = schemas.iter().map(|(schema_id, (_, schema_str))| {
         quote! {
             #schema_id => {
-                ::serde_json::from_str(#schema_str).expect(concat!("Failed to deserialize ", #schema_id))
+                ::cream::hidden::serde_json::from_str(#schema_str).expect(concat!("Failed to deserialize ", #schema_id))
             }
         }
     }).collect::<Vec<_>>();
@@ -98,13 +114,34 @@ fn declare_manager_trait(
         pub trait #manager: ::std::fmt::Debug + Send + Sync + 'static {
             async fn list(
                 &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
                 args: ::cream::ListResourceArgs<'async_trait>,
-            ) -> Result<::cream::ListResourceResult<#ty>, ::cream::Error>;
-            async fn get(&self, args: ::cream::GetResourceArgs<'async_trait>) -> Result<#ty, ::cream::Error>;
-            async fn create(&self, resource: #create_ty) -> Result<String, ::cream::Error>;
-            async fn update(&self, args: ::cream::UpdateResourceArgs<'async_trait>) -> Result<(), ::cream::Error>;
-            async fn replace(&self, id: &'async_trait str, resource: #create_ty) -> Result<(), ::cream::Error>;
-            async fn delete(&self, id: &'async_trait str) -> Result<(), ::cream::Error>;
+            ) -> ::std::result::Result<::cream::ListResourceResult<#ty>, ::cream::Error>;
+            async fn get(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                args: ::cream::GetResourceArgs<'async_trait>
+            ) -> ::std::result::Result<#ty, ::cream::Error>;
+            async fn create(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                resource: #create_ty
+            ) -> ::std::result::Result<String, ::cream::Error>;
+            async fn update(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                args: ::cream::UpdateResourceArgs<'async_trait>
+            ) -> ::std::result::Result<(), ::cream::Error>;
+            async fn replace(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                id: &'async_trait str, resource: #create_ty
+            ) -> Result<(), ::cream::Error>;
+            async fn delete(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                id: &'async_trait str
+            ) -> ::std::result::Result<(), ::cream::Error>;
 
             fn default_page_size(&self) -> usize {
                 50
@@ -118,9 +155,10 @@ fn declare_manager_trait(
         impl<T: #manager> ::cream::GenericResourceManager for #adapter<T> {
             async fn list(
                 &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
                 args: ::cream::ListResourceArgs<'async_trait>,
-            ) -> Result<::cream::ListResourceResult<::cream::hidden::ijson::IObject>, ::cream::Error> {
-                let result = self.0.list(args).await?;
+            ) -> ::std::result::Result<::cream::ListResourceResult<::cream::hidden::ijson::IObject>, ::cream::Error> {
+                let result = self.0.list(parts, args).await?;
                 Ok(::cream::ListResourceResult {
                     resources: result.resources.into_iter().map(|mut resource| {
                         resource.locate();
@@ -131,35 +169,56 @@ fn declare_manager_trait(
                 })
             }
 
-            async fn get(&self, args: ::cream::GetResourceArgs<'async_trait>) -> Result<::cream::hidden::ijson::IObject, ::cream::Error> {
-                let mut resource = self.0.get(args).await?;
+            async fn get(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                args: ::cream::GetResourceArgs<'async_trait>
+            ) -> ::std::result::Result<::cream::hidden::ijson::IObject, ::cream::Error> {
+                let mut resource = self.0.get(parts, args).await?;
                 resource.locate();
                 Ok(resource.to_object())
             }
 
-            async fn create(&self, resource: ::cream::hidden::ijson::IObject) -> Result<String, ::cream::Error> {
+            async fn create(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                resource: ::cream::hidden::ijson::IObject
+            ) -> ::std::result::Result<String, ::cream::Error> {
                 let create_resource = #create_ty::from_object(&resource)?;
-                self.0.create(create_resource).await
+                self.0.create(parts, create_resource).await
             }
 
-            async fn update(&self, args: ::cream::UpdateResourceArgs<'async_trait>) -> Result<(), ::cream::Error> {
-                self.0.update(args).await
+            async fn update(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                args: ::cream::UpdateResourceArgs<'async_trait>
+            ) -> ::std::result::Result<(), ::cream::Error> {
+                self.0.update(parts, args).await
             }
 
-            async fn replace(&self, id: &str, resource: ::cream::hidden::ijson::IObject) -> Result<(), ::cream::Error> {
+            async fn replace(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                id: &str,
+                resource: ::cream::hidden::ijson::IObject
+            ) -> ::std::result::Result<(), ::cream::Error> {
                 let create_resource = #create_ty::from_object(&resource)?;
-                self.0.replace(id, create_resource).await
+                self.0.replace(parts, id, create_resource).await
             }
 
-            async fn delete(&self, id: &str) -> Result<(), ::cream::Error> {
-                self.0.delete(id).await
+            async fn delete(
+                &self,
+                parts: &'async_trait ::cream::hidden::axum::http::request::Parts,
+                id: &str
+            ) -> ::std::result::Result<(), ::cream::Error> {
+                self.0.delete(parts, id).await
             }
             fn default_page_size(&self) -> usize {
                 self.0.default_page_size()
             }
 
             fn load_resource_type(&self) -> ::cream::ResourceType {
-                ::serde_json::from_str(#resource_type_str).expect(concat!("Failed to deserialize resource type"))
+                ::cream::hidden::serde_json::from_str(#resource_type_str).expect(concat!("Failed to deserialize resource type"))
             }
 
             fn load_schema(&self, id: &str) -> ::cream::Schema {
@@ -200,7 +259,7 @@ fn declare_schema_struct(
         returned: Returned::Always,
         uniqueness: Uniqueness::Server,
         reference_types: None,
-        sub_attributes: Vec::new(),
+        sub_attributes: None,
     };
 
     let external_id_attribute = Attribute {
@@ -215,7 +274,7 @@ fn declare_schema_struct(
         returned: Returned::Default,
         uniqueness: Uniqueness::None,
         reference_types: None,
-        sub_attributes: Vec::new(),
+        sub_attributes: None,
     };
 
     let extra_attributes = if core_resource_type.is_some() {
@@ -255,7 +314,9 @@ fn declare_schema_struct(
                     create_ty,
                 } = declare_schema_struct(
                     format_ident!("{}{}", struct_name, singular_name),
-                    &attr.sub_attributes,
+                    attr.sub_attributes
+                        .as_ref()
+                        .expect("Complex attribute must have sub-attributes"),
                     schema_urn.clone(),
                     Some(attr_name),
                     None,
@@ -395,12 +456,25 @@ fn declare_schema_struct(
     if let Some(resource_type) = core_resource_type {
         let resource_name = &resource_type.name;
         let endpoint = &resource_type.endpoint;
+        let mut schema_type_names = Vec::new();
+
+        let schema_id = &resource_type.schema;
         let schema_type_name = format_ident!("{}Schema", struct_name);
         let resource_type_name = format_ident!("{}ResourceType", struct_name);
         other_declarations.push(quote! {
-            ::cream::declare_schema!(#schema_type_name = "urn:ietf:params:scim:schemas:core:2.0:Schema");
+            ::cream::declare_schema!(#schema_type_name = #schema_id);
             ::cream::declare_resource_type!(#resource_type_name = #resource_name);
         });
+        schema_type_names.push(schema_type_name);
+
+        for (i, ext) in extensions.iter().enumerate() {
+            let schema_id = &ext.schema;
+            let schema_type_name = format_ident!("{}Ext{}", struct_name, i);
+            other_declarations.push(quote! {
+                ::cream::declare_schema!(#schema_type_name = #schema_id);
+            });
+            schema_type_names.push(schema_type_name);
+        }
 
         other_methods.push(quote! {
             pub fn locate(&mut self) {
@@ -411,6 +485,20 @@ fn declare_schema_struct(
                 )));
             }
         });
+
+        if schema_type_names.len() == 1 {
+            // If there's one schema, we can't use a tuple, because serde will not serialize it as an array
+            // if it has a single element, so use a fixed size array instead.
+            let schema_type_name = &schema_type_names[0];
+            fields.push(quote! {
+                pub schemas: [#schema_type_name; 1],
+            });
+        } else {
+            // With more than once schema we must use a tuple since the schemas are distinct types.
+            fields.push(quote! {
+                pub schemas: (#(#schema_type_names),*),
+            });
+        }
 
         fields.push(quote! {
             pub meta: ::cream::Meta<#resource_type_name>,
@@ -452,13 +540,12 @@ fn declare_schema_struct(
         }
 
         impl #create_struct_name {
-            pub fn from_object(object: &::cream::hidden::ijson::IObject) -> Result<Self, ::cream::Error> {
-                ::cream::hidden::ijson::from_value(object.as_ref()).map_err(|e| ::cream::Error {
-                    status: ::cream::hidden::axum::http::StatusCode::BAD_REQUEST,
-                    schemas: Default::default(),
-                    scim_type: Some(::cream::ErrorType::InvalidValue),
-                    detail: e.to_string(),
-                })
+            pub fn from_object(object: &::cream::hidden::ijson::IObject) -> ::std::result::Result<Self, ::cream::Error> {
+                ::cream::hidden::ijson::from_value(object.as_ref()).map_err(|e| ::cream::Error::new(
+                    ::cream::hidden::axum::http::StatusCode::BAD_REQUEST,
+                    Some(::cream::ErrorType::InvalidValue),
+                    e.to_string(),
+                ))
             }
         }
     };
@@ -469,6 +556,15 @@ fn declare_schema_struct(
     }
 }
 
+/// Generate support code for a resource type.
+///
+/// Syntax:
+/// ```ignore
+/// declare_resource!("<path/to/resource_type.json>" as <ResourceName> [
+///     "<path/to/core_schema.json>",
+///     ...<optional extension schemas>,
+/// ]);
+/// ```
 #[proc_macro]
 pub fn declare_resource(input: TokenStream) -> TokenStream {
     let DeclareResource {
@@ -479,10 +575,13 @@ pub fn declare_resource(input: TokenStream) -> TokenStream {
     } = parse_macro_input!(input as DeclareResource);
 
     // Load the resource type and referenced schemas
-    let (resource_type, _resource_type_str) = load_static_resource::<ResourceType>(&path);
+    let mut referenced_files_hack = Vec::new();
+    let (resource_type, _resource_type_str) =
+        load_static_resource::<ResourceType>(&path, &mut referenced_files_hack);
     let mut schemas = HashMap::new();
     for ref_schema in ref_schemas {
-        let (schema, schema_str) = load_static_resource::<Schema>(&ref_schema.path);
+        let (schema, schema_str) =
+            load_static_resource::<Schema>(&ref_schema.path, &mut referenced_files_hack);
         schemas.insert(schema.id.clone(), (schema, schema_str));
     }
 
@@ -504,6 +603,7 @@ pub fn declare_resource(input: TokenStream) -> TokenStream {
     );
 
     let mut result = TokenStream2::new();
+    result.extend(referenced_files_hack);
     result.extend(declaration);
     result.extend(declare_manager_trait(
         manager,

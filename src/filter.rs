@@ -12,6 +12,9 @@ use crate::{
 
 mod parse;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, PartialEq)]
 pub(crate) enum Filter {
     Present(AttrPath),
@@ -70,6 +73,7 @@ pub(crate) trait Visitor: Sized {
     }
 }
 
+/// Re-exports all names which are used for matching on filters.
 pub mod prelude {
     pub use super::{CompValueRef::*, CompareOp::*, FilterRef::*, ValuePathRef::*};
 }
@@ -82,7 +86,7 @@ impl Filter {
                 FilterRef::Compare(attr_path.as_ref(), *op, value.as_ref())
             }
             Self::Has(attr_path, filter) => {
-                FilterRef::ValuePath(attr_path.as_ref(), scope.alloc((**filter).as_ref(scope)))
+                FilterRef::Has(attr_path.as_ref(), scope.alloc((**filter).as_ref(scope)))
             }
             Self::And(filters) => FilterRef::And(
                 scope.alloc(
@@ -104,7 +108,6 @@ impl Filter {
         }
     }
     pub(crate) fn take_resource_type_filter(self) -> Result<(Option<Self>, String), Self> {
-        dbg!(&self);
         match self {
             Self::And(filters) => {
                 let mut remaining = Vec::new();
@@ -157,17 +160,25 @@ impl Filter {
     }
 }
 
+/// A reference to a filter expression.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum FilterRef<'a> {
+    /// Whether an attribute is present.
     Present(AttrPathRef<'a>),
+    /// A comparison between an attribute and a value.
     Compare(AttrPathRef<'a>, CompareOp, CompValueRef<'a>),
-    ValuePath(AttrPathRef<'a>, &'a Self),
+    /// Whether a value in a multi-valued attribute matches a filter.
+    Has(AttrPathRef<'a>, &'a Self),
+    /// A logical AND operation between filters.
     And(&'a [Self]),
+    /// A logical OR operation between filters.
     Or(&'a [Self]),
+    /// A logical NOT operation on a filter.
     Not(&'a Self),
 }
 
 impl FilterRef<'_> {
+    /// Iterates over individual filter expressions which are combined with logical AND.
     pub fn iter_cnf(&self) -> impl Iterator<Item = Self> {
         let items: Vec<_> = match self {
             Self::And(filters) => filters.iter().flat_map(Self::iter_cnf).collect(),
@@ -194,9 +205,12 @@ impl ValuePath {
     }
 }
 
+/// A attribute or filter expression which can be the target of an update.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ValuePathRef<'a> {
+    /// A simple attribute path.
     Attr(AttrPathRef<'a>),
+    /// An attribute path with a filter applied.
     Filtered(AttrPathRef<'a>, FilterRef<'a>),
 }
 
@@ -217,23 +231,37 @@ impl AttrPath {
     }
 }
 
+/// A single attribute reference.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct AttrPathRef<'a> {
+    /// The schema ID to which this attribute belongs. Omitted for core schema attributes.
     pub urn: Option<&'a str>,
+    /// The name of the attribute.
     pub name: &'a str,
+    /// The name of a sub-attribute, if any.
     pub sub_attr: Option<&'a str>,
 }
 
+/// Supported comparison operators.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CompareOp {
+    /// Equal to.
     Equal,
+    /// Not equal to.
     NotEqual,
+    /// Contains.
     Contains,
+    /// Starts with.
     StartsWith,
+    /// Ends with.
     EndsWith,
+    /// Greater than.
     GreaterThan,
+    /// Greater than or equal to.
     GreaterThanOrEqual,
+    /// Less than.
     LessThan,
+    /// Less than or equal to.
     LessThanOrEqual,
 }
 
@@ -276,11 +304,16 @@ impl CompValue {
     }
 }
 
+/// A literal value in a filter.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CompValueRef<'a> {
+    /// The null value.
     Null,
+    /// A boolean value.
     Bool(bool),
+    /// A numeric value.
     Num(&'a INumber),
+    /// A string value.
     Str(&'a str),
 }
 

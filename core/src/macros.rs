@@ -1,3 +1,4 @@
+/// Declare a schema with a given name and id.
 #[macro_export]
 macro_rules! declare_schema {
     ($name:ident = $id:literal) => {
@@ -9,6 +10,7 @@ macro_rules! declare_schema {
     };
 }
 
+/// Declare a resource type with a given name and id.
 #[macro_export]
 macro_rules! declare_resource_type {
     ($name:ident = $id:literal) => {
@@ -20,6 +22,7 @@ macro_rules! declare_resource_type {
     };
 }
 
+/// Load a JSON file from the `include_str!` macro.
 #[macro_export]
 macro_rules! load_static_json {
     ($path:literal) => {

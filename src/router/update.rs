@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{request::Parts, StatusCode},
     response::IntoResponse,
     Extension,
 };
@@ -53,6 +53,7 @@ pub(crate) async fn create_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Query(args): Query<GetResourcesArgs>,
+    parts: Parts,
     Json(body): Json<IObject>,
 ) -> Result<impl IntoResponse, Error> {
     let rts = state
@@ -60,9 +61,9 @@ pub(crate) async fn create_resource(
         .resource_types
         .get(&resource_type)
         .ok_or_else(Error::not_found)?;
-    let id = rts.manager.create(body).await?;
+    let id = rts.manager.create(&parts, body).await?;
 
-    get_resource_inner(&state, rts, args, id)
+    get_resource_inner(&state, &parts, rts, args, id)
         .await
         .map(|r| (StatusCode::CREATED, r))
 }
@@ -72,6 +73,7 @@ pub(crate) async fn patch_resource(
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Path(id): Path<String>,
     Query(args): Query<GetResourcesArgs>,
+    parts: Parts,
     Json(body): Json<PatchResourceArgs>,
 ) -> Result<impl IntoResponse, Error> {
     let scope = Bump::new();
@@ -124,9 +126,9 @@ pub(crate) async fn patch_resource(
         items: &items,
     };
 
-    rts.manager.update(translated_args).await?;
+    rts.manager.update(&parts, translated_args).await?;
 
-    get_resource_inner(&state, rts, args, id).await
+    get_resource_inner(&state, &parts, rts, args, id).await
 }
 
 pub(crate) async fn put_resource(
@@ -134,6 +136,7 @@ pub(crate) async fn put_resource(
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Path(id): Path<String>,
     Query(args): Query<GetResourcesArgs>,
+    parts: Parts,
     Json(body): Json<IObject>,
 ) -> Result<impl IntoResponse, Error> {
     let rts = state
@@ -141,21 +144,22 @@ pub(crate) async fn put_resource(
         .resource_types
         .get(&resource_type)
         .ok_or_else(Error::not_found)?;
-    rts.manager.replace(&id, body).await?;
+    rts.manager.replace(&parts, &id, body).await?;
 
-    get_resource_inner(&state, rts, args, id).await
+    get_resource_inner(&state, &parts, rts, args, id).await
 }
 
 pub(crate) async fn delete_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
     Path(id): Path<String>,
+    parts: Parts,
 ) -> Result<impl IntoResponse, Error> {
     let rts = state
         .0
         .resource_types
         .get(&resource_type)
         .ok_or_else(Error::not_found)?;
-    rts.manager.delete(&id).await?;
+    rts.manager.delete(&parts, &id).await?;
     Ok(StatusCode::NO_CONTENT)
 }

@@ -12,6 +12,7 @@ fn fix_attribute_casing_inner(schema: &Schema, name: &mut String, parent_name: O
             if let Some(sub_attr) = parent_attr
                 .sub_attributes
                 .iter()
+                .flatten()
                 .find(|a| a.name.eq_ignore_ascii_case(name))
             {
                 if sub_attr.name != *name {
@@ -68,7 +69,7 @@ pub(crate) fn list_optional_attributes<'a>(
                 }
             }
         }
-        for sub_attr in &attr.sub_attributes {
+        for sub_attr in attr.sub_attributes.iter().flatten() {
             let sub_path = as_attr(schema, sub_attr, is_core, Some(path));
             match sub_attr.returned {
                 Returned::Always => {}

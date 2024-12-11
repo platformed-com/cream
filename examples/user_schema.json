@@ -128,6 +128,15 @@
       "uniqueness": "none"
     },
     {
+      "name": "active",
+      "type": "boolean",
+      "multiValued": false,
+      "description": "A Boolean value indicating the User's administrative status.",
+      "required": false,
+      "mutability": "readWrite",
+      "returned": "default"
+    },
+    {
       "name": "groups",
       "type": "complex",
       "multiValued": true,

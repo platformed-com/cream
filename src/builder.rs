@@ -8,6 +8,7 @@ use crate::{
     state::{Cream, InnerState, ResourceTypeState},
 };
 
+/// Builder for constructing a `Cream` instance.
 pub struct CreamBuilder {
     base_url: String,
     config: ServiceProviderConfig,
@@ -16,6 +17,7 @@ pub struct CreamBuilder {
 }
 
 impl CreamBuilder {
+    /// Create a new `CreamBuilder` with the given base URL and service provider configuration.
     pub fn new(base_url: &str, config: ServiceProviderConfig) -> Self {
         Self {
             base_url: base_url.to_string(),
@@ -29,6 +31,7 @@ impl CreamBuilder {
             self.schemas.insert(id.into(), manager.load_schema(id));
         }
     }
+    /// Add a new resource type to be handled by cream.
     pub fn resource_type(mut self, manager: impl GenericResourceManager) -> Self {
         let resource_type = manager.load_resource_type();
 
@@ -46,6 +49,8 @@ impl CreamBuilder {
         );
         self
     }
+
+    /// Build the `Cream` instance.
     pub fn build(self) -> Cream {
         Cream(Arc::new(InnerState {
             base_url: self.base_url,

@@ -1,3 +1,8 @@
+//! cream-core
+//!
+//! This crate contains the core types and traits for the `cream` crate.
+#![deny(missing_docs)]
+
 mod date_time;
 mod macros;
 mod meta;

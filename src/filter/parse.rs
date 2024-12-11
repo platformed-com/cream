@@ -15,12 +15,16 @@ pub fn filter(i: &str) -> IResult<&str, Filter> {
 pub fn attr_filter(i: &str) -> IResult<&str, Filter> {
     alt((
         map(
-            tuple((attr_path, space1, tag_no_case("pr"))),
-            |(attr_path, _, _)| Filter::Present(attr_path),
+            terminated(attr_path, pair(space1, tag_no_case("pr"))),
+            Filter::Present,
         ),
         map(
-            tuple((attr_path, space1, compare_op, space1, comp_value)),
-            |(attr_path, _, compare_op, _, comp_value)| {
+            tuple((
+                terminated(attr_path, space1),
+                terminated(compare_op, space1),
+                comp_value,
+            )),
+            |(attr_path, compare_op, comp_value)| {
                 Filter::Compare(attr_path, compare_op, comp_value)
             },
         ),
@@ -76,16 +80,37 @@ pub fn group_filter(i: &str) -> IResult<&str, Filter> {
 
 pub fn has_filter(i: &str) -> IResult<&str, Filter> {
     map(
-        tuple((attr_path, delimited(char('['), filter, char(']')))),
-        |(attr_path, filter)| Filter::Has(attr_path, Box::new(filter)),
+        pair(attr_path, delimited(char('['), filter, char(']'))),
+        |(attr_path, mut filter)| {
+            AttrPathPrefixer { parent: &attr_path }.visit_filter(&mut filter);
+            Filter::Has(attr_path, Box::new(filter))
+        },
     )(i)
+}
+
+struct AttrPathPrefixer<'a> {
+    parent: &'a AttrPath,
+}
+
+impl Visitor for AttrPathPrefixer<'_> {
+    fn visit_attr_path(&mut self, attr_path: &mut AttrPath) {
+        attr_path.sub_attr = Some(attr_path.name.clone());
+        attr_path.name = self.parent.name.clone();
+        attr_path.urn = self.parent.urn.clone();
+    }
 }
 
 pub fn value_path(i: &str) -> IResult<&str, ValuePath> {
     map(
-        tuple((attr_path, opt(delimited(char('['), filter, char(']'))))),
-        |(attr_path, filter)| {
-            if let Some(filter) = filter {
+        pair(
+            attr_path,
+            opt(pair(delimited(char('['), filter, char(']')), opt(sub_attr))),
+        ),
+        |(mut attr_path, filter)| {
+            if let Some((mut filter, sub_attr)) = filter {
+                // Prefix all attributes inside the filter with the parent attribute
+                AttrPathPrefixer { parent: &attr_path }.visit_filter(&mut filter);
+                attr_path.sub_attr = sub_attr;
                 ValuePath::Filtered(attr_path, filter)
             } else {
                 ValuePath::Attr(attr_path)

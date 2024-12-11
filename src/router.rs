@@ -15,6 +15,7 @@ mod retrieve;
 mod update;
 
 impl Cream {
+    /// Build an Axum router for the `Cream` instance.
     pub fn router(&self) -> Router {
         let mut router = meta::router().route("/.search", post(retrieve::search_root));
 

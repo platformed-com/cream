@@ -1,14 +1,17 @@
 use serde::{Deserialize, Serialize, Serializer};
 
+/// A reference to a resource or external URL.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Reference(ReferenceInner);
 
 impl Reference {
+    /// Construct a new relative reference.
     pub fn new_relative(relative: &str) -> Self {
         Self(ReferenceInner::Relative(RelativeReference(
             relative.to_string(),
         )))
     }
+    /// Construct a new absolute reference.
     pub fn new_absolute(absolute: &str) -> Self {
         Self(ReferenceInner::Absolute(absolute.to_string()))
     }
@@ -24,6 +27,7 @@ enum ReferenceInner {
 
 #[cfg(feature = "tokio")]
 tokio::task_local! {
+    #[doc(hidden)]
     pub static BASE_URL: String;
 }
 
