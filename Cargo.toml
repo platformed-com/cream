@@ -5,6 +5,18 @@ members = ["core", "macros"]
 name = "cream"
 version = "0.1.0"
 edition = "2021"
+description = "An implementation of SCIM (System for Cross-domain Identity Management)."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/platformed-com/cream"
+keywords = [
+    "scim",
+    "identity",
+    "management",
+    "rest",
+    "api",
+    "user",
+    "provisioning",
+]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

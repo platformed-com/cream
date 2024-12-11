@@ -2,6 +2,9 @@
 name = "cream-core"
 version = "0.1.0"
 edition = "2021"
+description = "This crate contains the core types and traits for the `cream` crate."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/platformed-com/cream"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
