@@ -115,7 +115,7 @@ pub(crate) async fn patch_resource(
 
         let op = match operation.op {
             PatchOperationType::Add => manager::UpdateOp::Add(&operation.value),
-            PatchOperationType::Remove => manager::UpdateOp::Remove,
+            PatchOperationType::Remove => manager::UpdateOp::Remove(&operation.value),
             PatchOperationType::Replace => manager::UpdateOp::Replace(&operation.value),
         };
         items.push(UpdateResourceItem { path, op })

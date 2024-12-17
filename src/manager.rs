@@ -118,8 +118,9 @@ pub struct UpdateResourceItem<'a> {
 pub enum UpdateOp<'a> {
     /// Add a value.
     Add(&'a IValue),
-    /// Remove a value.
-    Remove,
+    /// Remove a value. The presence of a value is a non-standard extension used by
+    /// Microsoft Entra. Normally the value to remove should be specified via a filter.
+    Remove(&'a IValue),
     /// Replace a value in an attribute.
     Replace(&'a IValue),
 }

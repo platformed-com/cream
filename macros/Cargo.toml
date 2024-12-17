@@ -1,6 +1,6 @@
 [package]
 name = "cream-macros"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "This crate defines procedural macros for the `cream` crate."
 license = "MIT OR Apache-2.0"
@@ -11,7 +11,7 @@ proc-macro = true
 
 [dependencies]
 syn = "1.0"
-cream-core = { path = "../core", version = "0.1" }
+cream-core = { path = "../core", version = "0.2" }
 serde = { version = "1.0" }
 serde_json = "1.0"
 quote = "1.0"
