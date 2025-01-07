@@ -42,10 +42,10 @@ fn resource_router(resource_type: String) -> Router<Cream> {
         .route("/", get(retrieve::list_resources))
         .route("/", post(update::create_resource))
         .route("/.search", post(retrieve::search_resources))
-        .route("/:id", get(retrieve::get_resource))
-        .route("/:id", patch(update::patch_resource))
-        .route("/:id", put(update::put_resource))
-        .route("/:id", delete(update::delete_resource))
+        .route("/{id}", get(retrieve::get_resource))
+        .route("/{id}", patch(update::patch_resource))
+        .route("/{id}", put(update::put_resource))
+        .route("/{id}", delete(update::delete_resource))
         .layer(Extension(ResourceTypeName(resource_type)))
 }
 

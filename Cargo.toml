@@ -3,7 +3,7 @@ members = ["core", "macros"]
 
 [package]
 name = "cream"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "An implementation of SCIM (System for Cross-domain Identity Management)."
 license = "MIT OR Apache-2.0"
@@ -11,9 +11,10 @@ repository = "https://github.com/platformed-com/cream"
 keywords = ["scim", "identity", "management", "user", "provisioning"]
 
 [dependencies]
+async-trait = { version = "0.1.84" }
 serde = { version = "1.0", features = ["derive"] }
 ijson = "0.1.4"
-axum = { version = "0.7.9", features = ["macros"] }
+axum = { version = "0.8.0", features = ["macros"] }
 serde_json = "1.0"
 bytes = "1.0"
 derive_more = { version = "1", features = ["display", "deref"] }

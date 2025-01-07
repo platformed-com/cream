@@ -12,9 +12,9 @@ pub(crate) fn router() -> Router<Cream> {
     Router::new()
         .route("/ServiceProviderConfig", get(get_service_provider_config))
         .route("/Schemas", get(list_schemas))
-        .route("/Schemas/:id", get(get_schema))
+        .route("/Schemas/{id}", get(get_schema))
         .route("/ResourceTypes", get(list_resource_types))
-        .route("/ResourceTypes/:name", get(get_resource_type))
+        .route("/ResourceTypes/{name}", get(get_resource_type))
 }
 
 async fn get_service_provider_config(State(state): State<Cream>) -> impl IntoResponse {
