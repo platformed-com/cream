@@ -76,6 +76,7 @@ pub use state::Cream;
 
 #[doc(hidden)]
 pub mod hidden {
+    pub use async_trait;
     pub use axum;
     pub use ijson;
     pub use serde;

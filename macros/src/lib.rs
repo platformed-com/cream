@@ -110,7 +110,7 @@ fn declare_manager_trait(
         }
     }).collect::<Vec<_>>();
     quote! {
-        #[::cream::hidden::axum::async_trait]
+        #[::cream::hidden::async_trait::async_trait]
         pub trait #manager: ::std::fmt::Debug + Send + Sync + 'static {
             async fn list(
                 &self,
@@ -151,7 +151,7 @@ fn declare_manager_trait(
         #[derive(Debug)]
         pub struct #adapter<T: #manager>(T);
 
-        #[::cream::hidden::axum::async_trait]
+        #[::cream::hidden::async_trait::async_trait]
         impl<T: #manager> ::cream::GenericResourceManager for #adapter<T> {
             async fn list(
                 &self,

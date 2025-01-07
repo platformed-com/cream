@@ -44,7 +44,7 @@ struct UserFilterOptions {
     active: Option<bool>,
 }
 
-#[axum::async_trait]
+#[async_trait::async_trait]
 impl scim::UserManager for ScimManager {
     async fn list(
         &self,
@@ -312,7 +312,7 @@ struct GroupFilterOptions {
     display_name: Option<String>,
 }
 
-#[axum::async_trait]
+#[async_trait::async_trait]
 impl scim::GroupManager for ScimManager {
     async fn list(
         &self,

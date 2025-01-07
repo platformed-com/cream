@@ -11,7 +11,7 @@ use crate::{
 };
 
 /// A trait for managing a generic resource. Implemented automatically by the `define_resource` macro.
-#[axum::async_trait]
+#[async_trait::async_trait]
 pub trait GenericResourceManager: Debug + Send + Sync + 'static {
     /// List resources.
     async fn list(
