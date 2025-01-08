@@ -174,7 +174,7 @@ dependencies = [
 
 [[package]]
 name = "cream-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "derive_more",
  "serde",
@@ -185,7 +185,7 @@ dependencies = [
 
 [[package]]
 name = "cream-macros"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "convert_case",
  "cream-core",
