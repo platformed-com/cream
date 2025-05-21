@@ -17,6 +17,7 @@ mod scim {
 
     declare_resource!("examples/user_type.json" as User [
         "examples/user_schema.json",
+        "examples/user_schema_ext.json",
     ]);
 
     declare_resource!("examples/group_type.json" as Group [
@@ -205,6 +206,10 @@ impl scim::UserManager for ScimManager {
                 groups: None,
                 schemas: Default::default(),
                 meta: Default::default(),
+                ext0: resource.ext0.map(|ext| scim::UserExt0 {
+                    favorite_color: Some(ext.favorite_color),
+                    favorite_number: ext.favorite_number,
+                }),
             },
         );
         Ok(id)
@@ -292,6 +297,10 @@ impl scim::UserManager for ScimManager {
                 groups: None,
                 schemas: Default::default(),
                 meta: Default::default(),
+                ext0: resource.ext0.map(|ext| scim::UserExt0 {
+                    favorite_color: Some(ext.favorite_color),
+                    favorite_number: ext.favorite_number,
+                }),
             },
         );
         Ok(())

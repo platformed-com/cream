@@ -416,24 +416,25 @@ fn declare_schema_struct(
             schemas,
             None,
         );
-        let ty = quote! { #ty };
+        let mut ty = quote! { #ty };
         let mut create_ty = quote! { #create_ty };
 
         other_declarations.push(declaration);
         let mut serde_attrs = Vec::new();
         serde_attrs.push(quote! { rename = #schema_id });
 
-        fields.push(quote! {
-            #[serde( #(#serde_attrs),* )]
-            pub #name: #ty,
-        });
-
         let mut serde_attrs = Vec::new();
         serde_attrs.push(quote! { rename = #schema_id });
         if !ext.required {
             create_ty = quote! { Option<#create_ty> };
+            ty = quote! { Option<#ty> };
             serde_attrs.push(quote! { default });
         }
+
+        fields.push(quote! {
+            #[serde( #(#serde_attrs),* )]
+            pub #name: #ty,
+        });
 
         create_fields.push(quote! {
             #[serde( #(#serde_attrs),* )]
@@ -469,7 +470,7 @@ fn declare_schema_struct(
 
         for (i, ext) in extensions.iter().enumerate() {
             let schema_id = &ext.schema;
-            let schema_type_name = format_ident!("{}Ext{}", struct_name, i);
+            let schema_type_name = format_ident!("{}Ext{}Schema", struct_name, i);
             other_declarations.push(quote! {
                 ::cream::declare_schema!(#schema_type_name = #schema_id);
             });

@@ -6,5 +6,10 @@
   "endpoint": "/Users",
   "description": "User Account",
   "schema": "urn:ietf:params:scim:schemas:core:2.0:User",
-  "schemaExtensions": []
+  "schemaExtensions": [
+    {
+      "schema": "urn:ietf:params:scim:schemas:custom:2.0:UserExtension",
+      "required": false
+    }
+  ]
 }
