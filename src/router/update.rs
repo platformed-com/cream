@@ -18,7 +18,7 @@ use crate::{
 use super::{
     args::{FixAttributeCasingVisitor, GetResourcesArgs, PatchOperationType, PatchResourceArgs},
     retrieve::get_resource_inner,
-    ResourceTypeName,
+    ResourceId, ResourceTypeName,
 };
 
 fn normalize_update<'a>(
@@ -71,7 +71,7 @@ pub(crate) async fn create_resource(
 pub(crate) async fn patch_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
-    Path(id): Path<String>,
+    Path(ResourceId { id }): Path<ResourceId>,
     Query(args): Query<GetResourcesArgs>,
     parts: Parts,
     Json(body): Json<PatchResourceArgs>,
@@ -134,7 +134,7 @@ pub(crate) async fn patch_resource(
 pub(crate) async fn put_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
-    Path(id): Path<String>,
+    Path(ResourceId { id }): Path<ResourceId>,
     Query(args): Query<GetResourcesArgs>,
     parts: Parts,
     Json(body): Json<IObject>,
@@ -152,7 +152,7 @@ pub(crate) async fn put_resource(
 pub(crate) async fn delete_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
-    Path(id): Path<String>,
+    Path(ResourceId { id }): Path<ResourceId>,
     parts: Parts,
 ) -> Result<impl IntoResponse, Error> {
     let rts = state

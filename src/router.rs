@@ -37,6 +37,11 @@ impl Cream {
 #[derive(Debug, Clone)]
 pub(crate) struct ResourceTypeName(pub String);
 
+#[derive(serde::Deserialize)]
+pub(crate) struct ResourceId {
+    pub id: String,
+}
+
 fn resource_router(resource_type: String) -> Router<Cream> {
     Router::new()
         .route("/", get(retrieve::list_resources))
