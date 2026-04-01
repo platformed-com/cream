@@ -19,7 +19,7 @@ use super::{
     args::{
         list_optional_attributes, FixAttributeCasingVisitor, GetResourcesArgs, ListResourcesArgs,
     },
-    ResourceTypeName,
+    ResourceId, ResourceTypeName,
 };
 
 async fn list_resources_inner(
@@ -191,7 +191,7 @@ pub(crate) async fn get_resource_inner(
 pub(crate) async fn get_resource(
     State(state): State<Cream>,
     Extension(ResourceTypeName(resource_type)): Extension<ResourceTypeName>,
-    Path(id): Path<String>,
+    Path(ResourceId { id }): Path<ResourceId>,
     Query(args): Query<GetResourcesArgs>,
     parts: Parts,
 ) -> Result<impl IntoResponse, Error> {
