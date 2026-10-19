@@ -58,7 +58,9 @@ async fn list_resources_inner(
     translated_args.count = args
         .count
         .unwrap_or_else(|| rts.manager.default_page_size());
-    translated_args.start_index = args.start_index.unwrap_or(1) - 1;
+    // RFC 7644 §3.4.2.4: a startIndex below 1 is interpreted as 1.
+    let start_index = args.start_index.unwrap_or(1).max(1);
+    translated_args.start_index = start_index - 1;
 
     let optional_attributes = list_optional_attributes(
         &args.attributes,
@@ -71,8 +73,8 @@ async fn list_resources_inner(
 
     let result = rts.manager.list(parts, translated_args).await?;
     Ok(Json(ListResponse {
-        start_index: args.start_index.unwrap_or(1),
-        total_results: result.resources.len(),
+        start_index,
+        total_results: result.total_count,
         items_per_page: result.items_per_page,
         resources: result.resources,
         ..Default::default()
@@ -140,7 +142,9 @@ pub(crate) async fn search_root(
     translated_args.count = args
         .count
         .unwrap_or_else(|| rts.manager.default_page_size());
-    translated_args.start_index = args.start_index.unwrap_or(1) - 1;
+    // RFC 7644 §3.4.2.4: a startIndex below 1 is interpreted as 1.
+    let start_index = args.start_index.unwrap_or(1).max(1);
+    translated_args.start_index = start_index - 1;
 
     let optional_attributes = list_optional_attributes(
         &args.attributes,
@@ -154,8 +158,8 @@ pub(crate) async fn search_root(
     let result = rts.manager.list(&parts, translated_args).await?;
 
     Ok(Json(ListResponse {
-        start_index: args.start_index.unwrap_or(1),
-        total_results: result.resources.len(),
+        start_index,
+        total_results: result.total_count,
         items_per_page: result.items_per_page,
         resources: result.resources,
         ..Default::default()
