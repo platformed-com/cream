@@ -176,9 +176,8 @@ dependencies = [
 name = "cream-core"
 version = "0.2.2"
 dependencies = [
- "derive_more",
  "serde",
- "serde_plain",
+ "serde_json",
  "time",
  "tokio",
 ]

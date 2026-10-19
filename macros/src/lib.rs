@@ -509,6 +509,7 @@ fn declare_schema_struct(
         #(#other_declarations)*
 
         #[derive(Debug, ::cream::hidden::serde::Serialize, Clone)]
+        #[serde(crate = "::cream::hidden::serde")]
         pub struct #struct_name {
             #(
                 #fields
@@ -533,6 +534,7 @@ fn declare_schema_struct(
         }
 
         #[derive(Debug, ::cream::hidden::serde::Deserialize, Clone)]
+        #[serde(crate = "::cream::hidden::serde")]
         pub struct #create_struct_name {
             #(
                 #create_fields

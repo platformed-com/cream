@@ -26,17 +26,13 @@ Cream takes care of the parts of SCIM that are easy to get wrong:
 
 ## Getting started
 
-Add cream and the crates its generated code refers to:
+Add cream, `async-trait` for implementing the generated manager traits, and axum and tokio to serve the router:
 
 ```toml
 [dependencies]
 cream = "0.2"
 async-trait = "0.1"
 axum = "0.8"
-derive_more = { version = "1", features = ["display"] }
-serde = "1"
-serde_plain = "1"
-serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
 ```
 
