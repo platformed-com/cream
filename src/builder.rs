@@ -18,6 +18,12 @@ pub struct CreamBuilder {
 
 impl CreamBuilder {
     /// Create a new `CreamBuilder` with the given base URL and service provider configuration.
+    ///
+    /// `base_url` is the public URL at which the router is served, without a trailing slash. It is
+    /// prepended to relative references such as `meta.location`.
+    ///
+    /// `config` is returned from `/ServiceProviderConfig`, and is usually loaded from a JSON file
+    /// with [`load_static_json!`](crate::load_static_json).
     pub fn new(base_url: &str, config: ServiceProviderConfig) -> Self {
         Self {
             base_url: base_url.to_string(),
@@ -31,7 +37,8 @@ impl CreamBuilder {
             self.schemas.insert(id.into(), manager.load_schema(id));
         }
     }
-    /// Add a new resource type to be handled by cream.
+    /// Add a new resource type to be handled by cream, typically `<Name>::manage(manager)` for a
+    /// type declared with [`declare_resource!`](crate::declare_resource).
     pub fn resource_type(mut self, manager: impl GenericResourceManager) -> Self {
         let resource_type = manager.load_resource_type();
 
