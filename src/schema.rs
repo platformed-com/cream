@@ -47,28 +47,17 @@ pub(crate) fn fix_attribute_casing(
     }
 }
 
-// Whether an attribute with `"returned": "default"` or `"request"` is selected by the `attributes`
-// (`include`) and `excludedAttributes` (`exclude`) parameters. `paths` holds the attribute's own
-// path, followed by its parent's for a sub-attribute, since naming a complex attribute names all
-// of its sub-attributes.
-//
-// RFC 7643 §7: once `attributes` is given, `default` attributes are only returned if it names
-// them. `include_all_defaults` keeps them for the sub-attributes of an attribute which is always
-// returned "regardless of the contents of the "attributes" parameter".
-fn is_selected(
-    returned: &Returned,
-    paths: &[AttrPathRef],
-    include: &[AttrPathRef],
-    exclude: &[AttrPathRef],
-    include_all_defaults: bool,
-) -> bool {
-    let named_in = |list: &[AttrPathRef]| paths.iter().any(|path| list.contains(path));
-    let included = match returned {
+// Whether an optional attribute is returned. `included` and `excluded` say whether the
+// `attributes` and `excludedAttributes` parameters name it, and `restricted` whether `attributes`
+// applies to it at all.
+fn is_selected(returned: &Returned, included: bool, excluded: bool, restricted: bool) -> bool {
+    let wanted = match returned {
+        // RFC 7643 §7: once `attributes` is given, only the attributes it names are returned.
+        Returned::Default => included || !restricted,
+        Returned::Request => included,
         Returned::Always | Returned::Never => false,
-        Returned::Default => include_all_defaults || include.is_empty() || named_in(include),
-        Returned::Request => named_in(include),
     };
-    included && !named_in(exclude)
+    wanted && !excluded
 }
 
 pub(crate) fn list_optional_attributes<'a>(
@@ -77,51 +66,40 @@ pub(crate) fn list_optional_attributes<'a>(
     exclude: &[AttrPathRef],
     is_core: bool,
 ) -> Vec<AttrPathRef<'a>> {
+    let restricted = !include.is_empty();
     let mut attrs = Vec::new();
     for attr in &schema.attributes {
         let path = as_attr(schema, attr, is_core, None);
-        let sub_attrs: Vec<_> = attr
-            .sub_attributes
-            .iter()
-            .flatten()
-            .map(|sub_attr| {
-                (
-                    &sub_attr.returned,
-                    as_attr(schema, sub_attr, is_core, Some(path)),
-                )
-            })
-            .collect();
+        let sub_attrs = attr.sub_attributes.as_deref().unwrap_or_default();
+        let sub_path = |sub_attr| as_attr(schema, sub_attr, is_core, Some(path));
 
-        let is_returned = match attr.returned {
-            Returned::Never => false,
-            Returned::Always => true,
+        match attr.returned {
+            Returned::Never => continue,
+            Returned::Always => {}
             Returned::Default | Returned::Request => {
-                // A complex attribute is also returned when one of its sub-attributes is named,
-                // so that `attributes=name.givenName` returns `name` containing only `givenName`.
-                let sub_attr_named = sub_attrs.iter().any(|(returned, sub_path)| {
-                    !matches!(returned, Returned::Never) && include.contains(sub_path)
+                // Naming a sub-attribute returns its parent, containing only that sub-attribute.
+                let sub_attr_named = sub_attrs.iter().any(|sub_attr| {
+                    !matches!(sub_attr.returned, Returned::Never)
+                        && include.contains(&sub_path(sub_attr))
                 });
-                let selected = is_selected(&attr.returned, &[path], include, exclude, false)
-                    || (sub_attr_named && !exclude.contains(&path));
-                if selected {
-                    attrs.push(path);
+                let included = include.contains(&path) || sub_attr_named;
+                let excluded = exclude.contains(&path);
+                if !is_selected(&attr.returned, included, excluded, restricted) {
+                    continue;
                 }
-                selected
+                attrs.push(path);
             }
-        };
-        if !is_returned {
-            continue;
         }
 
-        let include_all_defaults = matches!(attr.returned, Returned::Always);
-        for (returned, sub_path) in sub_attrs {
-            if is_selected(
-                returned,
-                &[sub_path, path],
-                include,
-                exclude,
-                include_all_defaults,
-            ) {
+        // An always-returned attribute is returned "regardless of the contents of the
+        // "attributes" parameter", so its sub-attributes keep their defaults.
+        let sub_restricted = restricted && !matches!(attr.returned, Returned::Always);
+        for sub_attr in sub_attrs {
+            let sub_path = sub_path(sub_attr);
+            // Naming a complex attribute names all of its sub-attributes.
+            let included = include.contains(&sub_path) || include.contains(&path);
+            let excluded = exclude.contains(&sub_path) || exclude.contains(&path);
+            if is_selected(&sub_attr.returned, included, excluded, sub_restricted) {
                 attrs.push(sub_path);
             }
         }
