@@ -10,6 +10,7 @@ declare_schema!(ErrorSchema = "urn:ietf:params:scim:api:messages:2.0:Error");
 
 /// SCIM error response.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Error {
     /// ["urn:ietf:params:scim:api:messages:2.0:Error"]
     pub(crate) schemas: [ErrorSchema; 1],
