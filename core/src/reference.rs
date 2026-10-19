@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize, Serializer};
 pub struct Reference(ReferenceInner);
 
 impl Reference {
-    /// Construct a new relative reference.
+    /// Construct a new reference relative to the SCIM base URL, such as `/Users/123`.
+    ///
+    /// When serialized while Cream's router is handling a request, the base URL is prepended.
+    /// Otherwise, or without the `tokio` feature, it serializes as the relative path unchanged.
     pub fn new_relative(relative: &str) -> Self {
         Self(ReferenceInner::Relative(RelativeReference(
             relative.to_string(),

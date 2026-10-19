@@ -17,13 +17,15 @@
 //!
 //! Cream is a Rust implementation of SCIM, designed to be easy to use and flexible.
 //!
-//! Users of cream define their supported resource types via standard SCIM schemas. Cream then generates Rust code for these types,
-//! and exposes an `axum::Router` which can be mounted directly into any `axum` or `tower-http`-based application.
+//! Users of cream define their supported resource types via standard SCIM schemas. The [`declare_resource!`] macro then
+//! generates Rust code for these types, and [`Cream::router`] exposes an `axum::Router` which can be mounted directly into any
+//! `axum` or `tower`-based application.
 //!
 //! SCIM is a complex and underspecified standard, and Cream aims to hide some of this complexity from the user:
 //!
-//! - Many parts of SCIM are case-insensitive, but some are case-sensitive. Cream uses your schema to normalize the casing on
-//!   attributes, schema IDs and filters, so that your application can expect a consistent casing.
+//! - Many parts of SCIM are case-insensitive, but some are case-sensitive. Cream uses your schema to normalize the casing of
+//!   attribute names and schema IDs in filters, `sortBy`, `attributes`, `excludedAttributes` and PATCH paths, so that your
+//!   application can expect a consistent casing. Attribute names in request bodies must match the schema's casing exactly.
 //!
 //! - SCIM provides many ways to do the same thing. For example, you can search for resources of a particular type via a `GET`
 //!   request with query parameters, via a `POST` request with a filter in the body, or by a `POST` to the SCIM base URL with a
@@ -34,18 +36,31 @@
 //!   way different SCIM clients may filter for resources.
 //!
 //! - SCIM clients can request that some fields be excluded whilst other fields are included. Cream hides this complexity by
-//!   giving you a single list of "optional" fields that are to be included along with the required fields which are always
-//!   present.
+//!   giving you a single list of "optional" fields that are to be included, alongside the fields with `"returned": "always"`
+//!   which must always be present.
 //!
-//! Cream supports all aspects of the SCIM v2 standard, with the exception of these optional endpoints:
+//! Cream implements the SCIM v2 protocol, with these exceptions:
+//!
 //! - `/Me`
-//!    
+//!
 //!   This endpoint only makes sense when the SCIM client authenticates as a specific user, which is not part of the typical
 //!   SCIM use-case.
 //!
 //! - `/Bulk`
 //!
 //!   This endpoint is not yet implemented, but may be added in future.
+//!
+//! - Searching from the server root
+//!
+//!   Only `POST /.search` is supported, and its filter must select a single resource type with
+//!   `meta.resourceType eq "<name>"`. `GET /` with query parameters is not supported.
+//!
+//! - ETags
+//!
+//!   Cream does not evaluate `If-Match` or `If-None-Match`. Each manager method receives the request [`Parts`], so a manager
+//!   can implement versioning itself.
+//!
+//! [`Parts`]: axum::http::request::Parts
 //!
 #![deny(missing_docs)]
 

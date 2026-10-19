@@ -1,6 +1,6 @@
 //! cream-macros
 //!
-//! This crate defines procedural macros for the `cream`` crate.
+//! This crate defines procedural macros for the `cream` crate.
 #![deny(missing_docs)]
 
 use std::{collections::HashMap, fs};
@@ -509,6 +509,7 @@ fn declare_schema_struct(
         #(#other_declarations)*
 
         #[derive(Debug, ::cream::hidden::serde::Serialize, Clone)]
+        #[serde(crate = "::cream::hidden::serde")]
         pub struct #struct_name {
             #(
                 #fields
@@ -533,6 +534,7 @@ fn declare_schema_struct(
         }
 
         #[derive(Debug, ::cream::hidden::serde::Deserialize, Clone)]
+        #[serde(crate = "::cream::hidden::serde")]
         pub struct #create_struct_name {
             #(
                 #create_fields
@@ -562,9 +564,33 @@ fn declare_schema_struct(
 /// ```ignore
 /// declare_resource!("<path/to/resource_type.json>" as <ResourceName> [
 ///     "<path/to/core_schema.json>",
-///     ...<optional extension schemas>,
+///     ...<extension schemas>,
 /// ]);
 /// ```
+///
+/// Paths are relative to the root of the calling crate (`CARGO_MANIFEST_DIR`). The list must
+/// contain the resource type's core schema and every extension schema it references.
+///
+/// For `<ResourceName>`, this generates:
+///
+/// - `<ResourceName>`, the resource as returned to clients. Attributes which are never returned
+///   or write-only are omitted, and attributes not always returned are `Option`s. The `id`,
+///   `externalId`, `schemas` and `meta` attributes are added automatically.
+/// - `Create<ResourceName>`, the resource as received from clients in POST and PUT requests.
+///   Read-only attributes, including `id`, are omitted, and attributes which are not required are
+///   optional.
+/// - `<ResourceName><Attribute>` and `Create<ResourceName><Attribute>` for each complex
+///   attribute. The names of multi-valued attributes are made singular, such as `UserEmail` for
+///   `emails`.
+/// - `<ResourceName>Ext<N>` and `Create<ResourceName>Ext<N>` for the Nth extension schema,
+///   stored in the field `ext<N>`.
+/// - An associated constant per attribute on each struct not prefixed with `Create`, such as
+///   `User::USER_NAME` or `UserName::GIVEN_NAME`, for matching attribute paths in filters and
+///   updates.
+/// - A `<ResourceName>Manager` trait to implement, and `<ResourceName>::manage`, which wraps an
+///   implementation for [`CreamBuilder::resource_type`].
+///
+/// [`CreamBuilder::resource_type`]: https://docs.rs/cream/latest/cream/struct.CreamBuilder.html#method.resource_type
 #[proc_macro]
 pub fn declare_resource(input: TokenStream) -> TokenStream {
     let DeclareResource {

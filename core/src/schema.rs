@@ -5,7 +5,7 @@ use crate::{declare_resource_type, declare_schema, meta::Meta, reference::Refere
 declare_schema!(SchemaSchema = "urn:ietf:params:scim:schemas:core:2.0:Schema");
 declare_resource_type!(SchemaResourceType = "Schema");
 
-/// A SCIM schema
+/// A SCIM schema.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Schema {
@@ -26,7 +26,7 @@ pub struct Schema {
 }
 
 impl Schema {
-    /// Adds the location metadata to this schema.
+    /// Set `meta.location` to `/Schemas/{id}`.
     pub fn locate(&mut self) {
         self.meta.location = Some(Reference::new_relative(&format!("/Schemas/{}", self.id)));
     }
@@ -74,7 +74,8 @@ pub struct Attribute {
 }
 
 impl Attribute {
-    /// Construct a new attribute.
+    /// Construct a new single-valued attribute, with the other characteristics set to the defaults
+    /// from RFC 7643 §2.2: optional, case-insensitive, read-write, returned by default and not unique.
     pub fn new(name: String, type_: Type) -> Self {
         Self {
             name,
@@ -91,17 +92,17 @@ impl Attribute {
             sub_attributes: None,
         }
     }
-    /// Set whether the attribute is multi-valued.
+    /// Mark the attribute as multi-valued.
     pub fn multi_valued(mut self) -> Self {
         self.multi_valued = true;
         self
     }
-    /// Set whether the attribute is required.
+    /// Mark the attribute as required.
     pub fn required(mut self) -> Self {
         self.required = true;
         self
     }
-    /// Set whether the attribute is case-sensitive.
+    /// Mark the attribute as case-sensitive.
     pub fn case_exact(mut self) -> Self {
         self.case_exact = true;
         self
@@ -111,42 +112,42 @@ impl Attribute {
         self.sub_attributes = Some(sub_attributes);
         self
     }
-    /// Set this attribute as immutable
+    /// Mark the attribute as immutable.
     pub fn immutable(mut self) -> Self {
         self.mutability = Mutability::Immutable;
         self
     }
-    /// Set this attribute as read-only
+    /// Mark the attribute as read-only.
     pub fn read_only(mut self) -> Self {
         self.mutability = Mutability::ReadOnly;
         self
     }
-    /// Set this attribute as write-only
+    /// Mark the attribute as write-only.
     pub fn write_only(mut self) -> Self {
         self.mutability = Mutability::WriteOnly;
         self
     }
-    /// Set this attribute as always returned
+    /// Mark the attribute as always returned.
     pub fn always_returned(mut self) -> Self {
         self.returned = Returned::Always;
         self
     }
-    /// Set this attribute as never returned
+    /// Mark the attribute as never returned.
     pub fn never_returned(mut self) -> Self {
         self.returned = Returned::Never;
         self
     }
-    /// Set this attribute as returned on request
+    /// Mark the attribute as returned only on request.
     pub fn returned_on_request(mut self) -> Self {
         self.returned = Returned::Request;
         self
     }
-    /// Set this attribute as unique on this server
+    /// Mark the attribute as unique on this server.
     pub fn unique(mut self) -> Self {
         self.uniqueness = Uniqueness::Server;
         self
     }
-    /// Set this attribute as globally unique
+    /// Mark the attribute as globally unique.
     pub fn globally_unique(mut self) -> Self {
         self.uniqueness = Uniqueness::Global;
         self

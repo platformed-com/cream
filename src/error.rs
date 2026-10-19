@@ -10,6 +10,7 @@ declare_schema!(ErrorSchema = "urn:ietf:params:scim:api:messages:2.0:Error");
 
 /// SCIM error response.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Error {
     /// ["urn:ietf:params:scim:api:messages:2.0:Error"]
     pub(crate) schemas: [ErrorSchema; 1],
@@ -53,12 +54,12 @@ impl Error {
         }
     }
 
-    /// Create a new 404 error response.
+    /// Create a 404 error response.
     pub fn not_found() -> Self {
         Self::new(StatusCode::NOT_FOUND, None, "Not Found".to_string())
     }
 
-    /// Create an error response indicating that a filter is invalid or not supported.
+    /// Create a 400 error response indicating that a filter is invalid or not supported.
     pub fn invalid_filter() -> Self {
         Self::new(
             StatusCode::BAD_REQUEST,
@@ -67,7 +68,7 @@ impl Error {
         )
     }
 
-    /// Create an error response indicating that an attribute path is invalid or not supported.
+    /// Create a 400 error response indicating that an attribute path is invalid or not supported.
     pub fn invalid_path() -> Self {
         Self::new(
             StatusCode::BAD_REQUEST,
@@ -76,7 +77,7 @@ impl Error {
         )
     }
 
-    /// Create an error response indicating that a different type of value was expected.
+    /// Create a 400 error response indicating that a different type of value was expected.
     pub fn expected(expected: &str) -> Self {
         Self::new(
             StatusCode::BAD_REQUEST,
@@ -85,7 +86,7 @@ impl Error {
         )
     }
 
-    /// Create an error response indicating that a different type of value was expected.
+    /// Create a 409 error response indicating that the value of `attribute` is already in use.
     pub fn uniqueness(attribute: &str) -> Self {
         Self::new(
             StatusCode::CONFLICT,
@@ -102,23 +103,23 @@ impl Error {
 pub enum ErrorType {
     /// The filter is invalid or not supported.
     InvalidFilter,
-    /// Too many results would be returned.
+    /// The filter yields more results than the server is willing to process.
     TooMany,
-    /// Conflict in attribute uniqueness.
+    /// One or more attribute values are already in use or reserved.
     Uniqueness,
-    /// The attribute cannot be modified.
+    /// The modification is not compatible with the attribute's mutability.
     Mutability,
-    /// Syntax error when parsing request.
+    /// The request body is malformed or does not conform to the request schema.
     InvalidSyntax,
     /// The attribute path is invalid or not supported.
     InvalidPath,
-    /// Attribute filter did not match any values.
+    /// The path did not yield an attribute or value that could be operated on.
     NoTarget,
-    /// The attribute value is invalid.
+    /// A required value is missing, or a value is not compatible with the operation or attribute type.
     InvalidValue,
     /// The SCIM protocol version is not supported.
     InvalidVers,
-    /// The attribute is sensitive and cannot be read.
+    /// The request passed sensitive information, such as personal data, in the request URI.
     Sensitive,
 }
 

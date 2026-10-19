@@ -18,6 +18,9 @@ pub use schema::{Attribute, Mutability, Returned, Schema, Type, Uniqueness};
 
 #[doc(hidden)]
 pub mod hidden {
+    pub use serde;
+    pub use serde_json;
+
     #[cfg(feature = "tokio")]
     pub use crate::reference::BASE_URL;
 }

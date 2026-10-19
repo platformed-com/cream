@@ -16,6 +16,13 @@ mod update;
 
 impl Cream {
     /// Build an Axum router for the `Cream` instance.
+    ///
+    /// Routes are relative to the SCIM base URL, so the router can be nested under a prefix:
+    ///
+    /// - `GET /ServiceProviderConfig`, `GET /Schemas[/{id}]` and `GET /ResourceTypes[/{name}]`
+    /// - `POST /.search`, which requires a `meta.resourceType eq "<name>"` filter
+    /// - for each resource type's endpoint: `GET` and `POST` on the endpoint, `POST` on
+    ///   `<endpoint>/.search`, and `GET`, `PATCH`, `PUT` and `DELETE` on `<endpoint>/{id}`
     pub fn router(&self) -> Router {
         let mut router = meta::router().route("/.search", post(retrieve::search_root));
 

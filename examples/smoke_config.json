@@ -4,23 +4,23 @@
     "supported": true
   },
   "bulk": {
-    "supported": true,
-    "maxOperations": 1000,
-    "maxPayloadSize": 1048576
+    "supported": false,
+    "maxOperations": 0,
+    "maxPayloadSize": 0
   },
   "authenticationSchemes": [],
   "changePassword": {
-    "supported": true
+    "supported": false
   },
   "documentationUri": "https://example.com/docs",
   "etag": {
-    "supported": true
+    "supported": false
   },
   "filter": {
     "supported": true,
     "maxResults": 100
   },
   "sort": {
-    "supported": true
+    "supported": false
   }
 }

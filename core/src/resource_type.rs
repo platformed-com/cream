@@ -33,7 +33,7 @@ pub struct ResourceType {
 }
 
 impl ResourceType {
-    /// Adds the location metadata to this resource type.
+    /// Set `meta.location` to `/ResourceTypes/{name}`.
     pub fn locate(&mut self) {
         self.meta.location = Some(Reference::new_relative(&format!(
             "/ResourceTypes/{}",
@@ -48,6 +48,6 @@ impl ResourceType {
 pub struct SchemaExtension {
     /// The schema ID.
     pub schema: String,
-    /// Whether attributes from this schema are required when creating a resource of this type.
+    /// Whether resources of this type must include this schema extension.
     pub required: bool,
 }

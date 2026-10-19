@@ -163,11 +163,13 @@ impl Filter {
 /// A reference to a filter expression.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum FilterRef<'a> {
-    /// Whether an attribute is present.
+    /// Whether an attribute is present (`pr`).
     Present(AttrPathRef<'a>),
     /// A comparison between an attribute and a value.
     Compare(AttrPathRef<'a>, CompareOp, CompValueRef<'a>),
-    /// Whether a value in a multi-valued attribute matches a filter.
+    /// Whether any value of a complex attribute matches a filter (`attr[filter]`). Attribute
+    /// paths in the inner filter are qualified with the outer attribute, so `emails[type eq "work"]`
+    /// filters on `emails.type`.
     Has(AttrPathRef<'a>, &'a Self),
     /// A logical AND operation between filters.
     And(&'a [Self]),
@@ -178,7 +180,8 @@ pub enum FilterRef<'a> {
 }
 
 impl FilterRef<'_> {
-    /// Iterates over individual filter expressions which are combined with logical AND.
+    /// Iterates over the individual filter expressions which are combined with logical AND,
+    /// flattening nested `And`s. Any other filter yields only itself.
     pub fn iter_cnf(&self) -> impl Iterator<Item = Self> {
         let items: Vec<_> = match self {
             Self::And(filters) => filters.iter().flat_map(Self::iter_cnf).collect(),
@@ -205,12 +208,14 @@ impl ValuePath {
     }
 }
 
-/// A attribute or filter expression which can be the target of an update.
+/// An attribute path, optionally filtered, which can be the target of an update.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ValuePathRef<'a> {
     /// A simple attribute path.
     Attr(AttrPathRef<'a>),
-    /// An attribute path with a filter applied.
+    /// An attribute path with a filter selecting which values to update (`attr[filter]` or
+    /// `attr[filter].subAttr`). Attribute paths in the filter are qualified with the outer
+    /// attribute, as for [`FilterRef::Has`].
     Filtered(AttrPathRef<'a>, FilterRef<'a>),
 }
 
@@ -245,23 +250,23 @@ pub struct AttrPathRef<'a> {
 /// Supported comparison operators.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CompareOp {
-    /// Equal to.
+    /// Equal to (`eq`).
     Equal,
-    /// Not equal to.
+    /// Not equal to (`ne`).
     NotEqual,
-    /// Contains.
+    /// Contains (`co`).
     Contains,
-    /// Starts with.
+    /// Starts with (`sw`).
     StartsWith,
-    /// Ends with.
+    /// Ends with (`ew`).
     EndsWith,
-    /// Greater than.
+    /// Greater than (`gt`).
     GreaterThan,
-    /// Greater than or equal to.
+    /// Greater than or equal to (`ge`).
     GreaterThanOrEqual,
-    /// Less than.
+    /// Less than (`lt`).
     LessThan,
-    /// Less than or equal to.
+    /// Less than or equal to (`le`).
     LessThanOrEqual,
 }
 
