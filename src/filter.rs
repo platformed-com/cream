@@ -222,7 +222,7 @@ pub(crate) struct AttrPath {
 }
 
 impl AttrPath {
-    pub(crate) fn as_ref(&self) -> AttrPathRef {
+    pub(crate) fn as_ref(&self) -> AttrPathRef<'_> {
         AttrPathRef {
             urn: self.urn.as_deref(),
             name: self.name.as_str(),
@@ -294,7 +294,7 @@ pub(crate) enum CompValue {
 }
 
 impl CompValue {
-    pub(crate) fn as_ref(&self) -> CompValueRef {
+    pub(crate) fn as_ref(&self) -> CompValueRef<'_> {
         match self {
             Self::Null => CompValueRef::Null,
             Self::Bool(b) => CompValueRef::Bool(*b),
