@@ -160,12 +160,13 @@ impl Attribute {
 
 /// The mutability of an attribute.
 #[allow(unused)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Mutability {
     /// Clients can only read this attribute.
     ReadOnly,
     /// Clients can read and write this attribute (default).
+    #[default]
     ReadWrite,
     /// Clients can set this value on creation, but not update it.
     Immutable,
@@ -173,15 +174,9 @@ pub enum Mutability {
     WriteOnly,
 }
 
-impl Default for Mutability {
-    fn default() -> Self {
-        Self::ReadWrite
-    }
-}
-
 /// When an attribute is returned.
 #[allow(unused)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Returned {
     /// The attribute is always returned.
@@ -189,23 +184,19 @@ pub enum Returned {
     /// The attribute is never returned.
     Never,
     /// The attribute is returned by default (default).
+    #[default]
     Default,
     /// The attribute is returned on request.
     Request,
 }
 
-impl Default for Returned {
-    fn default() -> Self {
-        Self::Default
-    }
-}
-
 /// The uniqueness of an attribute.
 #[allow(unused)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Uniqueness {
     /// The attribute is not unique (default).
+    #[default]
     None,
     /// The attribute is unique on this server.
     Server,
@@ -213,18 +204,13 @@ pub enum Uniqueness {
     Global,
 }
 
-impl Default for Uniqueness {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
 /// The data type of an attribute.
 #[allow(unused)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Type {
     /// A string.
+    #[default]
     String,
     /// A boolean.
     Boolean,
@@ -240,10 +226,4 @@ pub enum Type {
     Reference,
     /// A complex type with sub-attributes.
     Complex,
-}
-
-impl Default for Type {
-    fn default() -> Self {
-        Self::String
-    }
 }

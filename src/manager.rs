@@ -126,17 +126,12 @@ pub enum UpdateOp<'a> {
 }
 
 /// Sort order for listing resources.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum SortOrder {
     /// Sort in ascending order (default).
+    #[default]
     Ascending,
     /// Sort in descending order.
     Descending,
-}
-
-impl Default for SortOrder {
-    fn default() -> Self {
-        Self::Ascending
-    }
 }
