@@ -150,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "cream"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "async-trait",
  "axum",
@@ -174,7 +174,7 @@ dependencies = [
 
 [[package]]
 name = "cream-core"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -184,7 +184,7 @@ dependencies = [
 
 [[package]]
 name = "cream-macros"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "convert_case",
  "cream-core",
